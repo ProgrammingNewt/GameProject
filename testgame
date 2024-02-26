@@ -1,0 +1,82 @@
+import pygame 
+import random
+
+# Game dimensions
+WIDTH = 800
+HEIGHT = 600
+
+# Player settings
+PLAYER_SIZE = 50
+PLAYER_COLOR = (0, 0, 255)
+PLAYER_SPEED = 5
+
+# Vampire settings
+VAMPIRE_SIZE = 50
+VAMPIRE_COLOR = (255, 0, 0)
+VAMPIRE_SPEED = 3
+
+class Character(pygame.sprite.Sprite):
+    def __init__(self, color, width, height, speed):
+        super().__init__()
+        self.image = pygame.Surface([width, height])
+        self.image.fill(color)
+        self.rect = self.image.get_rect()
+        self.speed = speed
+
+class Player(Character):
+    def __init__(self, color, width, height, speed):
+        super().__init__(color, width, height, speed)
+        self.rect.x = WIDTH // 2 - self.rect.width // 2 # center horizontally
+        self.rect.y = HEIGHT - self.rect.height # at the bottom of the screen
+
+    def update(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            self.rect.x -= self.speed
+        if keys[pygame.K_RIGHT]:
+            self.rect.x += self.speed
+        if keys[pygame.K_UP]:
+            self.rect.y -= self.speed
+        if keys[pygame.K_DOWN]:
+            self.rect.y += self.speed
+
+class Vampire(Character):
+    def update(self):
+        self.rect.y += self.speed
+        if self.rect.y > HEIGHT:
+            self.rect.y = random.randrange(-100, -10)
+            self.rect.x = random.randrange(0, WIDTH)
+
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
+all_sprites = pygame.sprite.Group()
+vampires = pygame.sprite.Group()
+
+player = Player(PLAYER_COLOR, PLAYER_SIZE, PLAYER_SIZE, PLAYER_SPEED)
+all_sprites.add(player)
+
+for i in range(10):
+    vampire = Vampire(VAMPIRE_COLOR, VAMPIRE_SIZE, VAMPIRE_SIZE, VAMPIRE_SPEED)
+    vampire.rect.x = random.randrange(0, WIDTH)
+    vampire.rect.y = random.randrange(-100, -10)
+    all_sprites.add(vampire)
+    vampires.add(vampire)
+
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    all_sprites.update()
+
+    hits = pygame.sprite.spritecollide(player, vampires, False)
+    if hits:
+        running = False
+
+    screen.fill((0, 0, 0))
+    all_sprites.draw(screen)
+    pygame.display.flip()
+
+pygame.quit()
